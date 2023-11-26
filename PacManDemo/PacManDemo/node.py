@@ -1,3 +1,4 @@
+import random
 from pacman import *
 
 class Node:
@@ -10,7 +11,12 @@ class Node:
         self.nodes = []
         self.total_point = total_point
         self.max_point = max_point
-        self.state = False
+        self.direction = pacman.direction
+    
+    def compare(self, other):
+        if self.pacman.x != other.pacman.x or self.pacman.y != other.pacman.y or self.total_point != other.total_point:
+            return False
+        return True
         
     def expand(self):
         directions = ["u", "r", "d", "l"]
@@ -18,10 +24,24 @@ class Node:
         for i in range(4):
             if self.pacman.turn_allowed[i] == True:
                 node = Node(self.pacman, self.board, self.total_point, self.max_point)
+                node.direction = directions[i]
                 node.pacman.direction = directions[i]
-                node.pacman.check_state()
                 node.move()
                 self.nodes.append(node)
+                
+    # def expand_randomly(self):
+    #     directions = ["u", "r", "d", "l"]
+    #     self.check_position()
+    #     turns = [0, 1, 2, 3]
+    #     for _ in range(4):
+    #         i = random.choice(turns)
+    #         turns.remove(i)
+    #         if self.pacman.turn_allowed[i] == True:
+    #             node = Node(self.pacman, self.board, self.total_point, self.max_point)
+    #             node.direction = directions[i]
+    #             node.pacman.direction = directions[i]
+    #             node.move()
+    #             self.nodes.append(node)
         
     def check_position(self):
         self.pacman.turn_allowed = [False, False, False, False]
@@ -40,12 +60,16 @@ class Node:
         if self.board[p_y][p_x] == "o":
             self.board[p_y][p_x] = "."
             self.total_point += 1
-            self.state = True
             
-    def move(self):             
-        self.pacman.check_state()
+    def move(self):
+        self.check_position()
+        self.pacman.state = "run"
         while self.pacman.state == "run":
             self.pacman.move()
             self.eat_point()
             self.check_position()
             self.pacman.check_state()
+            
+    def is_goal(self):
+        return self.total_point == self.max_point
+            

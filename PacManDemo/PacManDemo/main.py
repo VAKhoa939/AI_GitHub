@@ -1,22 +1,32 @@
 import os
 import time
-from algorithms import Algorithms
+from algorithms import *
 from pacman import *
+from node import *
 
 
 # global variables
+# init_board = [
+#     ["#", "#", "#", "#", "#", "#", "#", "#", "#", "#", "#"],
+#     ["#", "o", "o", "o", "o", "o", "o", "o", "o", "o", "#"],
+#     ["#", "o", "#", "#", "#", "o", "#", "o", "#", "o", "#"],
+#     ["#", "o", "o", "o", "o", "o", "#", "o", "#", "o", "#"],
+#     ["#", "o", "#", "#", "#", "o", "#", "o", "#", "o", "#"],
+#     ["#", "o", "o", "o", "o", "o", "o", "o", "o", "o", "#"],
+#     ["#", "o", "#", "#", "#", "o", "#", "o", "#", "o", "#"],
+#     ["#", "o", "o", "o", "o", "o", "#", "o", "#", "o", "#"],
+#     ["#", "o", "#", "#", "#", "o", "#", "o", "#", "o", "#"],
+#     ["#", "o", "o", "o", "o", "o", "o", "o", "o", "o", "#"],
+#     ["#", "#", "#", "#", "#", "#", "#", "#", "#", "#", "#"]
+# ]
 init_board = [
-    ["#", "#", "#", "#", "#", "#", "#", "#", "#", "#", "#"],
-    ["#", "o", "o", "o", "o", "o", "o", "o", "o", "o", "#"],
-    ["#", "o", "#", "#", "#", "o", "#", "o", "#", "o", "#"],
-    ["#", "o", "o", "o", "o", "o", "#", "o", "#", "o", "#"],
-    ["#", "o", "#", "#", "#", "o", "#", "o", "#", "o", "#"],
-    ["#", "o", "o", "o", "o", "o", "o", "o", "o", "o", "#"],
-    ["#", "o", "#", "#", "#", "o", "#", "o", "#", "o", "#"],
-    ["#", "o", "o", "o", "o", "o", "#", "o", "#", "o", "#"],
-    ["#", "o", "#", "#", "#", "o", "#", "o", "#", "o", "#"],
-    ["#", "o", "o", "o", "o", "o", "o", "o", "o", "o", "#"],
-    ["#", "#", "#", "#", "#", "#", "#", "#", "#", "#", "#"]
+    ["#", "#", "#", "#", "#", "#", "#"],
+    ["#", "o", "o", "o", "o", "o", "#"],
+    ["#", "o", "#", "#", "#", "o", "#"],
+    ["#", "o", "o", "o", "o", "o", "#"],
+    ["#", "o", "#", "#", "#", "o", "#"],
+    ["#", "o", "o", "o", "o", "o", "#"],
+    ["#", "#", "#", "#", "#", "#", "#"],
 ]
 curr_board = []
 for i in range(len(init_board)):
@@ -25,7 +35,7 @@ max_point = 0
 total_point = 0
 game_mode = "manual"
 pacman = PacMan(0, 0)
-ai = Algorithms(pacman, curr_board, total_point, max_point)
+ai = Algorithms()
 ai_name = ""
 
 
@@ -39,7 +49,7 @@ def reset_board():
     total_point = 0
     game_mode = "manual"
     pacman = PacMan(0, 0)
-    ai = Algorithms(pacman, curr_board, total_point, max_point)
+    ai = Algorithms()
     ai_name = ""
 
 def draw_board():
@@ -79,6 +89,21 @@ def check_position(subject):
     if curr_board[p_y][p_x - 1] != "#":
         subject.turn_allowed[3] = True
         
+def is_goal():
+    global game_mode
+    if total_point == max_point:
+        print("Finished! You have eaten all points!")
+        if game_mode == "ai":
+            print("Depth = {0}, Nodes = {1}".format(ai.depth, ai.nodes))
+            print("Solution:", end = " ")
+            for direction in ai.solution:
+                print(direction, end = ", ")
+            print()
+            game_mode = "manual"
+        pacman.direction = ""
+        pacman.check_state()
+        
+        
 def play_manual():
     global game_mode
     command = input("Type a move or a command: ")
@@ -87,22 +112,23 @@ def play_manual():
     if command == "reset":
         os.system("cls")
         reset_board()
-        return True
-    if command == "gm ai":
+    elif command == "gm ai":
         game_mode = "ai"
-        return True
-    pacman.direction = command
+    elif command in ["u", "r", "d", "l"]:
+        pacman.direction = command
     return True
 
 def play_ai():
     global ai_name
-    if len(ai.solution) == 0:
+    if ai.sol_ptr == len(ai.solution):
         if ai_name == "":
             ai_name = input("Type an algorithm: ")
+        start_node = Node(pacman, curr_board, total_point, max_point)
         if ai_name == "dfs":
-            ai.depth_first_search()
+            ai.depth_first_search(start_node)
     else:
-        pacman.direction = ai.solution.pop(0)
+        pacman.direction = ai.solution[ai.sol_ptr]
+        ai.sol_ptr += 1
     return True
         
 def make_decision():
@@ -120,6 +146,7 @@ def main():
         check_position(pacman)
         pacman.check_state()
         print("Total points: ", total_point)
+        is_goal()
         time.sleep(0.2)
         if pacman.state == "stop":
             if not make_decision():
@@ -129,6 +156,8 @@ def main():
         
 # main program
 draw_board()
+max_point = count_point()
 eat_point()
 print("Total points: ", total_point)
 main()
+# ai.depth_first_search(Node(pacman, curr_board, total_point, max_point))

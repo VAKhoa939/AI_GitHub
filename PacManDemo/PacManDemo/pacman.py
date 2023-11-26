@@ -31,7 +31,7 @@ class PacMan:
         for i in range(4):
             if i != dir_id and self.turn_allowed[i]:
                 count += 1
-        if count > 1:
+        if count > 1 or not self.turn_allowed[dir_id]:
             self.state = "stop"
             self.direction = ""
         else:
