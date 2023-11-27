@@ -1,3 +1,5 @@
+from board import *
+from function import *
 score = 0
 goal_score = 0
 desired_fps = 25
@@ -21,3 +23,15 @@ flicker = False
 
 #settings
 color = 'Blue'
+level = [] #import the boards matrix from board.py
+for i in range(len(level1)):
+    level.append(level1[i].copy())
+row = len(level) #32
+column = len(level[0]) #56
+WIDTH = column * 20 #1300
+HEIGHT = row * 20 #850
+num1 = (HEIGHT - 50) // row #vertical
+num2 = (WIDTH // column)
+num3 = (num1 + num2) // 5 # 10
+player_imgs = []
+goal_score = goal_point(level)

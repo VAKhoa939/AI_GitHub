@@ -30,23 +30,6 @@ class something_moves:
                 self.y += self.speed
                 self.center_y = self.y + 6
                 
-    def change_ghost_direction(self):
-        temp = []
-        count_temp = 0 
-        for i in range(4):
-                 if self.turn_allowed[i] == True :
-                     temp.append(i)
-                     count_temp += 1
-                 if count_temp > 2 :
-                     self.state = -1
-        if self.state == -1 :
-            if self.name == 'pacman':
-                self.direction = temp[random.randint(0,len(temp)-1)]
-            else:
-                self.cdirection = temp[random.randint(0,len(temp)-1)]
-            print (self.state)
-            self.state = 1
-        self.move()
         
 
 class player(something_moves):
@@ -106,6 +89,16 @@ class player(something_moves):
            self.cdirection = 3
            self.state = 1
            
+    def check_state(self):
+        count = 0
+        for i in range(4):
+            if i != self.cdirection and self.turn_allowed[i]:
+                count += 1
+        if count > 1 or not self.turn_allowed[self.cdirection]:
+            self.state = -1
+        else:
+            self.state = 1
+           
             
 class ghost(something_moves):
     def __init__(self, name, x, y, cdirection, file, Id, box):
@@ -116,6 +109,20 @@ class ghost(something_moves):
     def set_target(self, player_x, player_y):
         self.target_x = player_x
         self.target_y = player_y
+    def change_direction(self):
+        temp = []
+        count_temp = 0 
+        for i in range(4):
+                 if self.turn_allowed[i] == True :
+                     temp.append(i)
+                     count_temp += 1
+                 if count_temp > 2 :
+                     self.state = -1
+        if self.state == -1 :
+            self.cdirection = temp[random.randint(0,len(temp)-1)]
+            print (self.state)
+            self.state = 1
+        self.move()
         
         
 

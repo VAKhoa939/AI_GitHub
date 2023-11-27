@@ -3,27 +3,15 @@ from tkinter import ttk
 from tracemalloc import start
 from PIL import Image, ImageTk
 
-from function import *
-from board import *
 from player import *
 from style import *
 from variable import *
+from node import Node
+from algorithms import *
 
 
 #Variable
 #var change depend on level (Manually)
-level = [] #import the boards matrix from board.py
-for i in range(len(level1)):
-    level.append(level1[i].copy())
-row = len(level) #32
-column = len(level[0]) #56
-WIDTH = column * 20 #1300
-HEIGHT = row * 20 #850
-num1 = (HEIGHT - 50) // row #vertical
-num2 = (WIDTH // column)
-num3 = (num1 + num2) // 5 # 10
-player_imgs = []
-goal_score = goal_point(level)
 
 
 #widely used var
@@ -78,6 +66,9 @@ status_display = StringVar()
 current_status = "Chosing mode"
 status_display.set(str(current_status))
 
+ai = Algorithms()
+algorithm_text = StringVar()
+
 
 
 top_frame = Canvas(root, bg = "Black", width = WIDTH, height = HEIGHT)
@@ -114,6 +105,7 @@ bot_frame2 = Frame(right_frame, bg = "Black", width = 50, height = HEIGHT // 2)
 #function
 top_frame.spooked = ImageTk.PhotoImage(spooked_img)
 top_frame.dead = ImageTk.PhotoImage(dead_img)
+
 #draw random
 def draw_random(index):
     global PacMan, life
@@ -163,9 +155,9 @@ def draw_board():
 # GUI function
 def draw_panel():
     # First page
+    global algorithm_text
     play_button = Button(bot_frame1, font = font ,text = "Play", command = start_game)
     play_button.pack(pady = 20)
-    algorithm_text = StringVar()
     algorithms_combobox = ttk.Combobox(bot_frame1, font = font,width = 20, textvariable = algorithm_text)
     algorithms_combobox['values'] = ('Depth First Search',
                                      'Breadth First Search',
@@ -202,7 +194,7 @@ def update_score(scor):
     score_display.set("score: " + str(scor))
     
 def update_game_status(state):
-    # global current_status
+    global current_status
     current_status = state
     
 # Core Function
@@ -404,6 +396,17 @@ def solve_pacman():
     start = 1
     PacMan.state = 1
     update_game_status('Solving')
+    
+def choose_algorithm():
+    if ai.sol_ptr == len(ai.solution):
+        start_node = Node(PacMan, level, score)
+        if algorithm_text.get() == 'Depth First Search':
+            ai.depth_first_search(start_node)
+        return False
+    else:
+        PacMan.direction = ai.solution[ai.sol_ptr]
+        ai.sol_ptr += 1
+        return True
 
 # Initialize the player animation
 # change the direction of the player
@@ -422,16 +425,20 @@ def main():
             loading_index = 0
         if start != -1:
             check_position(blinky)
-            blinky.change_ghost_direction()
+            blinky.change_direction()
             check_position(pinky)
-            pinky.change_ghost_direction()
+            pinky.change_direction()
             check_position(inky)
-            inky.change_ghost_direction()
+            inky.change_direction()
             check_position(clyde)
-            clyde.change_ghost_direction()
+            clyde.change_direction()
             if moving == 1 :
-                check_position(PacMan)
-                PacMan.change_ghost_direction()
+                PacMan.check_state()
+                if PacMan.state == -1:
+                    if choose_algorithm():
+                        PacMan.state = 1
+                        PacMan.change_direction_player()
+                PacMan.move()
             else:
                 PacMan.move()
             update_player(frame)

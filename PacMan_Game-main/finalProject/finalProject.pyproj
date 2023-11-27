@@ -21,6 +21,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="algorithms.py" />
     <Compile Include="board.py" />
     <Compile Include="node.py" />
     <Compile Include="variable.py" />
