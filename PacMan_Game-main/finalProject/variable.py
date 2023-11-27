@@ -1,5 +1,6 @@
 from board import *
 from function import *
+
 score = 0
 goal_score = 0
 desired_fps = 25
@@ -20,6 +21,15 @@ life = 3
 
 #control the flashing off the point
 flicker = False
+
+#widely used var
+eaten_ghost = [False, False, False, False]
+ghost_img = []
+
+# bonus Var
+history = []
+mode = 0
+cheat_code = ['','','','']
 
 #settings
 color = 'Blue'

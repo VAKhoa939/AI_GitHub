@@ -1,27 +1,12 @@
 from tkinter import *
 from tkinter import ttk
-from tracemalloc import start
 from PIL import Image, ImageTk
 
 from player import *
 from style import *
 from variable import *
-from node import Node
+from node import *
 from algorithms import *
-
-
-#Variable
-#var change depend on level (Manually)
-
-
-#widely used var
-eaten_ghost = [False, False, False, False]
-ghost_img = []
-
-# bonus Var
-history = []
-mode = 0
-cheat_code = ['','','','']
 
 
 #initial start location
@@ -32,22 +17,23 @@ direction = 0
 player_imgs.append(PacMan.imgs[0])
 
 #Ghost initial
-blinky = ghost('blinky',num1 * 3, num2 * 2 + num3, 0, "red", 0, True)
+blinky = ghost('blinky',num1 * 3, num2 * 2 + num3, 0, 'red', 0, True)
 blinky.set_target(PacMan.x, PacMan.y)
 
 #(row // 2) * num1 + num1, (column // 2) * num2 - num2
-pinky = ghost('pinky',num1 * 3, num2 * 2 + num3, 1, "pink", 1, True)
+pinky = ghost('pinky',num1 * 3, num2 * 2 + num3, 1, 'pink', 1, True)
 pinky.set_target(PacMan.x, PacMan.y)
 
-inky = ghost('inky',num1 * 3, num2 * 2 + num3, 2, "blue", 2, True)
+inky = ghost('inky',num1 * 3, num2 * 2 + num3, 2, 'blue', 2, True)
 inky.set_target(PacMan.x, PacMan.y)
 
-clyde = ghost('clyde',num1 * 3, num2 * 2 + num3, 3, "orange", 3, True)
+clyde = ghost('clyde',num1 * 3, num2 * 2 + num3, 3, 'orange', 3, True)
 clyde.set_target(PacMan.x, PacMan.y)
 
 #state of ghost
 spooked_img = Image.open('assets/ghost/powerup.png').resize((30, 30))
 dead_img = Image.open('assets/ghost/dead.png').resize((30, 30))
+
 
 #Begin program
 #start GUI
@@ -60,24 +46,26 @@ root.geometry('1350x800') #level 1650x800
 
 #score initial
 score_display = StringVar()
-score_display.set("score: 0")
+score_display.set('score: 0')
 
 status_display = StringVar()
-current_status = "Chosing mode"
+current_status = 'Chosing mode'
 status_display.set(str(current_status))
 
 ai = Algorithms()
 algorithm_text = StringVar()
+edit_text = StringVar()
 
-
-
-top_frame = Canvas(root, bg = "Black", width = WIDTH, height = HEIGHT)
+top_frame = Canvas(root, bg = 'Black', width = WIDTH, height = HEIGHT)
 top_frame.pack(padx = 200,side=LEFT)
 
-right_frame = Frame(root, bg = "Black", width = 50, height = HEIGHT)
+top_frame.spooked = ImageTk.PhotoImage(spooked_img)
+top_frame.dead = ImageTk.PhotoImage(dead_img)
+
+right_frame = Frame(root, bg = 'Black', width = 50, height = HEIGHT)
 right_frame.pack(side=LEFT)
 
-top_frame1 = Frame(right_frame, bg = "Black", width = WIDTH // 4 + 20, height = HEIGHT // 4)
+top_frame1 = Frame(right_frame, bg = 'Black', width = WIDTH // 4 + 20, height = HEIGHT // 4)
 top_frame1.pack()
 
 logo_frame = Image.open('assets/logo/pacman.jpg').resize((WIDTH // 2 + 20, HEIGHT // 4))
@@ -86,7 +74,7 @@ logo = Label(top_frame1, bg = 'Black' ,image= logo_frame)
 logo.image = logo_frame
 logo.pack()
 
-topFrame2 = Frame(right_frame, bg = "Black", width = WIDTH // 4 + 20, height = HEIGHT // 4)
+topFrame2 = Frame(right_frame, bg = 'Black', width = WIDTH // 4 + 20, height = HEIGHT // 4)
 topFrame2.pack()
 
 score_frame = Label(topFrame2, textvariable= score_display, font= font, bg = 'Black', fg = 'White')
@@ -95,16 +83,14 @@ score_frame.pack()
 game_status = Label(topFrame2, textvariable= status_display, font = font, bg = 'Black', fg = 'White')
 game_status.pack()
 
-bot_frame1 = Frame(right_frame, bg = "Black", width = 50, height = HEIGHT // 2)
-bot_frame1.pack(side=LEFT)
+bot_frame1 = Frame(right_frame, bg = 'Black', width = 50, height = HEIGHT // 2)
+bot_frame1.pack()
 
-bot_frame2 = Frame(right_frame, bg = "Black", width = 50, height = HEIGHT // 2)
+bot_frame2 = Frame(right_frame, bg = 'Black', width = 50, height = HEIGHT // 2)
 
 
 
 #function
-top_frame.spooked = ImageTk.PhotoImage(spooked_img)
-top_frame.dead = ImageTk.PhotoImage(dead_img)
 
 #draw random
 def draw_random(index):
@@ -126,16 +112,14 @@ def draw_random(index):
         
     status_display.set(str(current_status) + str(loading[index]))
     
-        
-
 #init a board
 def draw_board():
     for i in range(len(level)) :
         for j in range (len(level[i])) :
             if level[i][j] == 1 : #create normal point
-                top_frame.create_oval((j* num2 + (0.5 * num2), i * num1 + (0.5 * num1), j* num2 + (0.5 * num2) , i * num1 + (0.5 * num1)), outline = "white", width = 4)
+                top_frame.create_oval((j* num2 + (0.5 * num2), i * num1 + (0.5 * num1), j* num2 + (0.5 * num2) , i * num1 + (0.5 * num1)), outline = 'white', width = 4)
             if level[i][j] == 2 and not flicker: #create Special point
-                top_frame.create_oval((j* num2 + (0.5 * num2), i * num1 + (0.5 * num1), j* num2 + (0.5 * num2) , i * num1 + (0.5 * num1)), outline = "white", width = 10)
+                top_frame.create_oval((j* num2 + (0.5 * num2), i * num1 + (0.5 * num1), j* num2 + (0.5 * num2) , i * num1 + (0.5 * num1)), outline = 'white', width = 10)
             if level[i][j] == 3 : #create line vertical
                 top_frame.create_line((j* num2 + (0.5 * num2), i * num1, j* num2 + (0.5 * num2) , i * num1 + num1), fill = color, width= 5)    
             if level[i][j] == 4 : # create line horizontal
@@ -150,48 +134,59 @@ def draw_board():
                top_frame.create_arc((j* num2 + (num2 * 0.5) , i * num1 - (0.5 * num1), j* num2 - (num2 * 0.65) , i * num1 + (0.5 * num1)), outline = color , width= 5, start = 0, extent = -90, style = ARC)  
             
             if level[i][j] == 9 : # create the white line
-                top_frame.create_line((j* num2 , i * num1 + (0.5 * num1), j* num2 + num2, i * num1 + (0.5 * num1)), fill = "white", width= 2)    
+                top_frame.create_line((j* num2 , i * num1 + (0.5 * num1), j* num2 + num2, i * num1 + (0.5 * num1)), fill = 'white', width= 2)    
 
 # GUI function
 def draw_panel():
     # First page
     global algorithm_text
-    play_button = Button(bot_frame1, font = font ,text = "Play", command = start_game)
+    play_button = Button(bot_frame1, font = font ,text = 'Play', command = start_game)
     play_button.pack(pady = 20)
-    algorithms_combobox = ttk.Combobox(bot_frame1, font = font,width = 20, textvariable = algorithm_text)
-    algorithms_combobox['values'] = ('Depth First Search',
+    edit_combobox = ttk.Combobox(bot_frame1, font = font,width = 20, textvariable = algorithm_text)
+    edit_combobox['values'] = ('Depth First Search',
                                      'Breadth First Search',
                                      'Uniform Cost Search',
                                      'Greedy Search',
                                      'A-star Search')
-    algorithms_combobox.current(0)
-    algorithms_combobox.pack()
-    solve_button = Button(bot_frame1, font = font ,text = "Solve", command = solve_pacman)
+    edit_combobox.current(0)
+    edit_combobox.pack()
+    solve_button = Button(bot_frame1, font = font ,text = 'Solve', command = solve_pacman)
     solve_button.pack(pady = 20)
-    exit_button = Button(bot_frame1, font = font ,text = "Stop", command = root.destroy)
-    exit_button.pack(pady = 20)
-    exit_button = Button(bot_frame1, font = font ,text = "Edit Mode", command = switch_edit_mode)
-    exit_button.pack(pady = 20)
-    exit_button = Button(bot_frame1, font = font ,text = "Exit", command = root.destroy)
+    # stop_button = Button(bot_frame1, font = font ,text = 'Stop', command = root.destroy)
+    # stop_button.pack(pady = 20)
+    edit_button = Button(bot_frame1, font = font ,text = 'Edit Mode', command = switch_edit_mode)
+    edit_button.pack(pady = 20)
+    exit_button = Button(bot_frame1, font = font ,text = 'Exit', command = root.destroy)
     exit_button.pack(pady = 20)
 
     # Second page
-    confirm_button = Button(bot_frame2, font = font ,text = "Confirm", command = root.destroy)
+    edit_combobox = ttk.Combobox(bot_frame2, font = font,width = 20, textvariable = edit_text)
+    edit_combobox['values'] = ('Empty',
+                               'Dot',
+                               'Big dot',
+                               'Pac Man',
+                               'Blinky',
+                               'Pinky',
+                               'Inky',
+                               'Clyde',)
+    confirm_button = Button(bot_frame2, font = font ,text = 'Confirm', command = root.destroy)
     confirm_button.pack(pady = 20)
-    back_button = Button(bot_frame2, font = font ,text = "Back", command = switch_main_mode)
+    back_button = Button(bot_frame2, font = font ,text = 'Back', command = switch_main_mode)
     back_button.pack(pady = 20)
     
 def switch_edit_mode():
+    update_game_status('Editing')
     bot_frame1.forget()
-    bot_frame2.pack(side=LEFT)
+    bot_frame2.pack()
     
 def switch_main_mode():
+    update_game_status('Chosing mode')
     bot_frame2.forget()
-    bot_frame1.pack(side=LEFT)
+    bot_frame1.pack()
    
 def update_score(scor):
     global score_display
-    score_display.set("score: " + str(scor))
+    score_display.set('score: ' + str(scor))
     
 def update_game_status(state):
     global current_status
@@ -322,32 +317,32 @@ def move_left(event):
     global PacMan
     PacMan.state = 1
     PacMan.direction = 1
-    print("Key A is pressed")
-    history.append("A")
+    print('Key A is pressed')
+    history.append('A')
     check_position(PacMan)
     PacMan.change_direction_player()
 def move_right(event):
     global PacMan
     PacMan.state = 1
     PacMan.direction = 0
-    print("Key D is pressed")
-    history.append("D")
+    print('Key D is pressed')
+    history.append('D')
     check_position(PacMan)
     PacMan.change_direction_player()
 def move_up(event):
     global PacMan
     PacMan.state = 1
     PacMan.direction = 2
-    print("Key W is pressed")
-    history.append("W")
+    print('Key W is pressed')
+    history.append('W')
     check_position(PacMan)
     PacMan.change_direction_player()
 def move_down(event):
     global PacMan
     PacMan.state = 1
     PacMan.direction = 3
-    print("Key S is pressed")
-    history.append("S")
+    print('Key S is pressed')
+    history.append('S')
     check_position(PacMan)
     PacMan.change_direction_player()
     
@@ -361,9 +356,9 @@ def pause(event):
     
 #end Function
 def print_history():
-    print("--------------------------")
+    print('--------------------------')
     for i in range (len(history)):
-        print(f"{i +1}: ", history[i])    
+        print(f'{i +1}: ', history[i])    
     # print(blinky.center_x // num2)
     # print(blinky.center_y // num1)
     # print(num1)
@@ -380,15 +375,15 @@ def start_game():
     PacMan.state = 1
     update_game_status('Playing')
     # key bind
-    bA = root.bind("a", move_left)
-    bL =root.bind("<Left>",move_left)
-    bS = root.bind("s", move_down)
-    bDw = root.bind("<Down>",move_down)
-    bW = root.bind("w", move_up)
-    bU = root.bind("<Up>",move_up)
-    bD = root.bind("d", move_right)
-    bR = root.bind("<Right>",move_right)
-    bP = root.bind("p", pause)
+    bA = root.bind('a', move_left)
+    bL =root.bind('<Left>',move_left)
+    bS = root.bind('s', move_down)
+    bDw = root.bind('<Down>',move_down)
+    bW = root.bind('w', move_up)
+    bU = root.bind('<Up>',move_up)
+    bD = root.bind('d', move_right)
+    bR = root.bind('<Right>',move_right)
+    bP = root.bind('p', pause)
     
 def solve_pacman():
     global moving, start
@@ -450,7 +445,10 @@ def main():
             score = check_collison(score)
             update_score(score)
             if score == goal_score:
-                update_game_status('WIN!')
+                if moving == 1:
+                    update_game_status(f'FINISHED!\rDepth = {ai.depth}, Nodes = {ai.nodes}')
+                else:
+                    update_game_status('WIN!')
                 start = -1
             if life == 0:
                 start = -1
@@ -460,8 +458,8 @@ def main():
             #     print(PacMan.turn_allowed[i])
             for i in range (0, 4):
                 print(blinky.turn_allowed[i])
-            print("y: ",blinky.center_y // num1, " x: ", blinky.center_x // num2, "state: ", blinky.state, "cdirec: ", blinky.cdirection)
-            print("------------------------------------------")
+            print('y: ',blinky.center_y // num1, ' x: ', blinky.center_x // num2, 'state: ', blinky.state, 'cdirec: ', blinky.cdirection)
+            print('------------------------------------------')
             # #main functionality
       
             frame = (frame + 1) % len(PacMan.imgs)

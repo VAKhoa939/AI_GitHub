@@ -13,7 +13,7 @@ class Node:
         self.direction = PacMan.direction
     
     def compare(self, other):
-        if self.PacMan.x != other.PacMan.x or self.PacMan.y != other.PacMan.y or self.score != other.score:
+        if self.PacMan.center_x != other.PacMan.center_x or self.PacMan.center_y != other.PacMan.center_y or self.score != other.score:
             return False
         return True
         
