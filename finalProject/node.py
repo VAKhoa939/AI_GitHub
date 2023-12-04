@@ -15,12 +15,13 @@ class Node:
         self.cost = cost
         self.direction = ""
         self.is_goal = False
+        self.heuristic_value = 1000000
         
     def copy(self):
         node = Node(self.PacMan, self.level, self.score, self.depth, self.path, self.cost)
         node.direction = self.direction
         node.is_goal = self.is_goal
-        #node.heuristic_value = self.heuristic_value
+        node.heuristic_value = self.heuristic_value
         return node
     
     def compare(self, other):
@@ -45,9 +46,9 @@ class Node:
                 node.path.append(i)
                 self.nodes.append(node)
         
-    def check_position(self) :
+    def check_position(self):
         turn = [False, False, False, False]
-        if self.PacMan.center_x // row < row :
+        if self.PacMan.center_x // row < row:
             if self.PacMan.cdirection == 0: 
                 if self.level[self.PacMan.center_y // num1][(self.PacMan.center_x + num3 - 1) // num2] >= 3 :
                     self.PacMan.state = -1
@@ -130,7 +131,10 @@ class Node:
     def get_backward_move(self):
         if self.direction == "":
             return
-        self.direction = (self.direction + 2) % 4
+        if self.direction % 2 == 0:
+            self.direction += 1
+        else:
+            self.direction -= 1
         self.PacMan.cdirection = self.direction
         self.PacMan.direction = self.direction
             

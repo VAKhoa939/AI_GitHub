@@ -106,7 +106,7 @@ class player(something_moves):
            self.state = 1
            
     def check_state(self):
-        pacman_y, pacman_x = self.get_matrix_position()
+        PacMan_y, PacMan_x = self.get_matrix_position()
         count = 0
         for i in range(4):
             if i != self.cdirection and self.turn_allowed[i]:
@@ -159,7 +159,6 @@ class ghost(something_moves):
                 self.state = -1
         if self.state == -1 :
             self.cdirection = temp[random.randint(0,len(temp)-1)]
-            print (self.state)
             self.state = 1
         self.move()
         
