@@ -128,14 +128,19 @@ class Algorithms:
         for i in range(length - 1):
             if mode == "ucs":
                 min_cost = self.check_list[i].cost
-            if mode == "a_star":
+            elif mode == "greedy":
+                min_h = self.check_list[i].heuristic_value
+            elif mode == "a_star":
                 min_f = self.check_list[i].cost + self.check_list[i].heuristic_value
             min_id = i
-            for j in range(1, length):
+            for j in range(i + 1, length):
                 if mode == "ucs" and self.check_list[j].cost < min_cost:
                     min_cost = self.check_list[j].cost
                     min_id = j
-                if mode == "a_star" and (self.check_list[j].cost + self.check_list[j].heuristic_value) < min_f:
+                elif mode == "greedy" and self.check_list[j].heuristic_value < min_h:
+                    min_h = self.check_list[j].heuristic_value
+                    min_id = j
+                elif mode == "a_star" and (self.check_list[j].cost + self.check_list[j].heuristic_value) < min_f:
                     min_f = (self.check_list[j].cost + self.check_list[j].heuristic_value)
                     min_id = j
             if min_id != i:
@@ -143,11 +148,11 @@ class Algorithms:
  
 
     def find_nearest_food(self):
-        current_x, current_y = self.start_node.PacMan.get_matrix_position()
+        current_y, current_x = self.start_node.PacMan.get_matrix_position()
         nearest_food_position = None
         nearest_food_distance = float('inf')
         for food_position in self.food_positions:
-            food_x, food_y = food_position
+            food_y, food_x = food_position
             distance = ((food_x - current_x) ** 2 + (food_y - current_y) ** 2) ** 0.5
             if distance < nearest_food_distance:
                 nearest_food_distance = distance
@@ -155,5 +160,5 @@ class Algorithms:
         self.goal_position = nearest_food_position
 
     def heuristic(self, node):
-        PacMan_x, PacMan_y = node.PacMan.get_matrix_position()
+        PacMan_y, PacMan_x = node.PacMan.get_matrix_position()
         return (abs(PacMan_y - self.goal_position[0]) + abs(PacMan_x - self.goal_position[1])) * 1.5

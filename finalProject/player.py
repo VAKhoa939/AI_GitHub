@@ -106,7 +106,6 @@ class player(something_moves):
            self.state = 1
            
     def check_state(self):
-        PacMan_y, PacMan_x = self.get_matrix_position()
         count = 0
         for i in range(4):
             if i != self.cdirection and self.turn_allowed[i]:
@@ -120,7 +119,9 @@ class player(something_moves):
         return self.center_y, self.center_x
     
     def get_matrix_position(self):
-        return (self.center_y // num1), (self.center_x // num2)
+        y = self.center_y // num1
+        x = self.center_x // num2
+        return y, x
     
     # def move_fast(self):
     #     if self.state == 1:

@@ -495,13 +495,13 @@ def choose_algorithm():
     while ai.solution_ptr == len(ai.solution):
         if ai.name == 'Depth First Search':
             ai.depth_first_search()
-        if ai.name == 'Breadth First Search':
+        elif ai.name == 'Breadth First Search':
             ai.breadth_first_search()
-        if ai.name == 'Uniform Cost Search':
+        elif ai.name == 'Uniform Cost Search':
             ai.uniform_cost_search()
-        if ai.name == 'Greedy Search':
+        elif ai.name == 'Greedy Search':
             ai.greedy_search()
-        if ai.name == 'A-star Search':
+        elif ai.name == 'A-star Search':
             ai.a_star_search()
             
         update_explore_board()
@@ -509,7 +509,7 @@ def choose_algorithm():
         draw_explored_board()
         top_frame.delete('all')
         draw_board()
-        time.sleep(0.1)
+        time.sleep(0.5)
         
     update_game_status('Solving')
     PacMan.direction = ai.solution[ai.solution_ptr]

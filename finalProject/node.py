@@ -13,7 +13,7 @@ class Node:
         self.path = path.copy()
         self.depth = depth
         self.cost = cost
-        self.direction = ""
+        self.direction = -1
         self.is_goal = False
         self.heuristic_value = 1000000
         
