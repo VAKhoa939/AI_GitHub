@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 from PIL import Image, ImageTk
+import time, os
 
 from player import *
 from style import *
@@ -20,14 +21,13 @@ player_imgs.append(PacMan.imgs[0])
 blinky = ghost('blinky',num1 * 3, num2 * 2 + num3, 0, 'red', 0, True)
 blinky.set_target(PacMan.x, PacMan.y)
 
-#(row // 2) * num1 + num1, (column // 2) * num2 - num2
-pinky = ghost('pinky',num1 * 3, num2 * 2 + num3, 1, 'pink', 1, True)
+pinky = ghost('pinky',num1 * 30, num2 * 2 + num3, 1, 'pink', 1, True)
 pinky.set_target(PacMan.x, PacMan.y)
 
-inky = ghost('inky',num1 * 3, num2 * 2 + num3, 2, 'blue', 2, True)
+inky = ghost('inky',num1 * 3, num2 * 27 + num3, 2, 'blue', 2, True)
 inky.set_target(PacMan.x, PacMan.y)
 
-clyde = ghost('clyde',num1 * 3, num2 * 2 + num3, 3, 'orange', 3, True)
+clyde = ghost('clyde',num1 * 30, num2 * 27 + num3, 3, 'orange', 3, True)
 clyde.set_target(PacMan.x, PacMan.y)
 
 #state of ghost
@@ -55,6 +55,10 @@ status_display.set(str(current_status))
 ai = Algorithms()
 algorithm_text = StringVar()
 edit_text = StringVar()
+solution = []
+depth = 0
+nodes = 0
+cost = 0
 
 top_frame = Canvas(root, bg = 'Black', width = WIDTH, height = HEIGHT)
 top_frame.pack(padx = 200,side=LEFT)
@@ -136,24 +140,31 @@ def draw_board():
             if level[i][j] == 9 : # create the white line
                 top_frame.create_line((j* num2 , i * num1 + (0.5 * num1), j* num2 + num2, i * num1 + (0.5 * num1)), fill = 'white', width= 2)    
 
+
+def draw_explored_board():
+    for i in range(len(explore_board)):
+        for j in range(len(explore_board[i])):
+            print(explore_board[i][j], end = " ")
+        print()
+
 # GUI function
 def draw_panel():
     # First page
     global algorithm_text
-    play_button = Button(bot_frame1, font = font ,text = 'Play', command = start_game)
+    play_button = Button(bot_frame1, font = font ,text = 'Play', command = play_pacman)
     play_button.pack(pady = 20)
     edit_combobox = ttk.Combobox(bot_frame1, font = font,width = 20, textvariable = algorithm_text)
     edit_combobox['values'] = ('Depth First Search',
-                                     'Breadth First Search',
-                                     'Uniform Cost Search',
-                                     'Greedy Search',
-                                     'A-star Search')
+                               'Breadth First Search',
+                               'Uniform Cost Search',
+                               'Greedy Search',
+                               'A-star Search')
     edit_combobox.current(0)
     edit_combobox.pack()
     solve_button = Button(bot_frame1, font = font ,text = 'Solve', command = solve_pacman)
     solve_button.pack(pady = 20)
-    # stop_button = Button(bot_frame1, font = font ,text = 'Stop', command = root.destroy)
-    # stop_button.pack(pady = 20)
+    reset_button = Button(bot_frame1, font = font ,text = 'Reset', command = reset_board)
+    reset_button.pack(pady = 20)
     edit_button = Button(bot_frame1, font = font ,text = 'Edit Mode', command = switch_edit_mode)
     edit_button.pack(pady = 20)
     exit_button = Button(bot_frame1, font = font ,text = 'Exit', command = root.destroy)
@@ -169,6 +180,7 @@ def draw_panel():
                                'Pinky',
                                'Inky',
                                'Clyde',)
+    edit_combobox.pack(pady = 20)
     confirm_button = Button(bot_frame2, font = font ,text = 'Confirm', command = root.destroy)
     confirm_button.pack(pady = 20)
     back_button = Button(bot_frame2, font = font ,text = 'Back', command = switch_main_mode)
@@ -193,6 +205,77 @@ def update_game_status(state):
     current_status = state
     
 # Core Function
+# reset board
+def reset_board():
+    global score, frame, count, state, start, flicker_time, powerup_counter, start_up, moving, hit, loading_index, time_start, time_end, life, flicker, eaten_ghost, history, mode, level, explore_board, food_positions, ai, solution, depth, nodes, cost
+    score = 0
+    frame = 0
+    count = 0 #use for PacMan animation looping 
+    state = -1
+    start = -1
+    flicker_time = 0
+    powerup_counter = 0 
+    start_up = 0
+    moving = 0
+    hit = False
+    loading_index = 0
+    time_start = 0
+    time_end = 0
+
+    # variable for life increase / decrease
+    life = 3
+
+    #control the flashing off the point
+    flicker = False
+
+    #widely used var
+    eaten_ghost = [False, False, False, False]
+
+    # bonus Var
+    history.clear()
+    mode = 0
+
+    #settings
+    level.clear()
+    explore_board.clear()
+    food_positions.clear()
+    for i in range(len(level1)):
+        explore_board.append([])
+        for j in range(len(level1[i])):
+            if level1[i][j] < 3:
+                explore_board[i].append(" ")
+                if level1[i][j] == 1 or level1[i][j] == 2:
+                    food_positions.append((i, j))
+            else:
+                explore_board[i].append("#")
+        level.append(level1[i].copy())
+    
+    PacMan.direction = 0
+    PacMan.change_direction_player()
+    PacMan.reset_attributes((row // 2) * num1 - num1, (column // 2) * num2 + (7 * num2), 0)
+    blinky.reset_attributes(num1 * 3, num2 * 2 + num3, 0)
+    pinky.reset_attributes(num1 * 30, num2 * 2 + num3, 1)
+    inky.reset_attributes(num1 * 3, num2 * 27 + num3, 2)
+    clyde.reset_attributes(num1 * 30, num2 * 27 + num3, 3)
+    
+    ai = Algorithms()
+    solution.clear()
+    depth = 0
+    nodes = 0
+    cost = 0
+    
+def reset_ai():
+    global ai
+    explore_board.clear()
+    for i in range(len(level1)):
+        explore_board.append([])
+        for j in range(len(level1[i])):
+            if level1[i][j] != "#":
+                explore_board[i].append(" ")
+            else:
+                explore_board[i].append(level1[i][j])
+    ai = Algorithms()
+
 #draw initil player
 def draw_initial_player():
     global PacMan, state, frame, turn_allowed, blinky, pinky, inky, clyde
@@ -302,7 +385,7 @@ def check_position(A) :
 
 def check_collison(scor):
     global PacMan, level
-    if  0 < PacMan.x < 650 :
+    if  0 < PacMan.x < 600 :
         if level[PacMan.center_y // num1][PacMan.center_x//num2] == 1:
             level[PacMan.center_y // num1][PacMan.center_x//num2] = 0
             scor += 10
@@ -367,13 +450,14 @@ def print_history():
     # print(row)
     # print(column)
     
-def start_game():
-    global start, moving
+def play_pacman():
+    global start, moving, time_start
     if moving == 1:
         moving = 0
     start = 1
     PacMan.state = 1
     update_game_status('Playing')
+    time_start = time.time()
     # key bind
     bA = root.bind('a', move_left)
     bL =root.bind('<Left>',move_left)
@@ -386,28 +470,96 @@ def start_game():
     bP = root.bind('p', pause)
     
 def solve_pacman():
-    global moving, start
+    global moving, start, time_start
     moving = 1
     start = 1
     PacMan.state = 1
     update_game_status('Solving')
+    time_start = time.time()
     
 def choose_algorithm():
-    if ai.sol_ptr == len(ai.solution):
-        start_node = Node(PacMan, level, score)
-        if algorithm_text.get() == 'Depth First Search':
-            ai.depth_first_search(start_node)
-        return False
-    else:
-        PacMan.direction = ai.solution[ai.sol_ptr]
-        ai.sol_ptr += 1
-        return True
+    global ai, solution, depth, nodes, cost
+    if ai.solution_ptr == len(ai.solution):
+        #reset_ai()
+        top_frame.delete('all')
+        draw_board()
+        if ai.name == "":
+            ai.name = algorithm_text.get()
+        ai.start_node = Node(PacMan, level, score, ai.depth, [], 0)
+    while ai.solution_ptr == len(ai.solution):
+        if ai.name == 'Depth First Search':
+            ai.depth_first_search()
+        if ai.name == 'Breadth First Search':
+            ai.breadth_first_search()
+        if ai.name == 'Uniform Cost Search':
+            ai.uniform_cost_search()
+        # if ai.name == "a star":
+        #     ai.a_star_search()
+        top_frame.delete('all')
+        os.system("cls")
+        draw_explored_board()
+        update_explore_board()
+        draw_board()
+        time.sleep(0.5)
+    PacMan.direction = ai.solution[ai.solution_ptr]
+    ai.solution_ptr += 1
+    if ai.solution_ptr == len(ai.solution):
+        solution.extend(ai.solution)
+        depth += ai.depth
+        nodes += ai.nodes
+        cost += ai.cost
+    return True
+
+def update_explore_board():
+    global explore_board
+    # solution tile "S"
+    if len(ai.solution) > 0:
+        node = Node(PacMan, level, score, ai.depth, [], 0)
+        for i in range(len(ai.solution)):
+            node.expand()
+            for j in range(len(node.nodes)):
+                if node.nodes[j].direction == ai.solution[i]:
+                    node = node.nodes[j].copy()
+                    break
+            curr_node = node.copy()
+            curr_node.get_backward_move()
+            curr_node.check_position()
+            curr_node.PacMan.state = 1
+            pacman_y, pacman_x = curr_node.PacMan.get_matrix_position()
+            explore_board[pacman_y][pacman_x] = "S"
+            while curr_node.PacMan.state == 1:
+                curr_node.PacMan.move()
+                pacman_y, pacman_x = curr_node.PacMan.get_matrix_position()
+                if curr_node.PacMan.matrix_y != pacman_y or curr_node.PacMan.matrix_x != pacman_x:
+                    curr_node.check_position()
+                    curr_node.PacMan.check_state()
+                explore_board[pacman_y][pacman_x] = "S"
+        return
+        
+    # frontier tile "F" and explored tile "x"
+    ai.check_list.append(ai.start_node)
+    for i in range(len(ai.check_list) - 1, -1, -1):
+        curr_node = ai.check_list[i].copy()
+        curr_node.get_backward_move()
+        curr_node.check_position()
+        curr_node.PacMan.state = 1
+        pacman_y, pacman_x = curr_node.PacMan.get_matrix_position()
+        explore_board[pacman_y][pacman_x] = "F"
+        while curr_node.PacMan.state == 1:
+            curr_node.PacMan.move()
+            pacman_y, pacman_x = curr_node.PacMan.get_matrix_position()
+            if curr_node.PacMan.matrix_y != pacman_y or curr_node.PacMan.matrix_x != pacman_x:
+                curr_node.check_position()
+                curr_node.PacMan.check_state()
+            if explore_board[pacman_y][pacman_x] != "F":
+                explore_board[pacman_y][pacman_x] = "x"
+    ai.check_list.pop()        
 
 # Initialize the player animation
 # change the direction of the player
 #main 
 def main():
-    global PacMan, flicker_time, flicker, frame, count, score, state, powerup_counter, life, eaten_ghost, hit, mode, start, loading_index
+    global PacMan, flicker_time, flicker, frame, count, score, state, powerup_counter, life, eaten_ghost, hit, mode, start, loading_index, time_start, time_end
     if mode == 0 :
         #update board
         top_frame.delete('all')
@@ -445,22 +597,24 @@ def main():
             score = check_collison(score)
             update_score(score)
             if score == goal_score:
+                loading_index = 0
+                time_end = time.time()
                 if moving == 1:
-                    update_game_status(f'FINISHED!\rDepth = {ai.depth}, Nodes = {ai.nodes}')
+                    update_game_status(f'FINISHED! Time = {round((time_end - time_start), 2)}s\rDepth = {ai.depth}, Nodes = {ai.nodes}')
                 else:
-                    update_game_status('WIN!')
+                    update_game_status(f'WIN! Time = {round((time_end - time_start), 2)}s')
                 start = -1
             if life == 0:
                 start = -1
                 update_game_status('Game Over!')
             #debug console
-            # for i in range (0, 4):
-            #     print(PacMan.turn_allowed[i])
+            for i in range (0, 4):
+                print(PacMan.turn_allowed[i])
             for i in range (0, 4):
                 print(blinky.turn_allowed[i])
             print('y: ',blinky.center_y // num1, ' x: ', blinky.center_x // num2, 'state: ', blinky.state, 'cdirec: ', blinky.cdirection)
             print('------------------------------------------')
-            # #main functionality
+            #main functionality
       
             frame = (frame + 1) % len(PacMan.imgs)
             if count < 19: # control the cycle of PacMan
@@ -492,9 +646,7 @@ def main():
         slide_arr(history)
         print_history()
     
-# draw_board()
 draw_panel()
-# draw_initial_player()
 ghost_instance()
 main()
     

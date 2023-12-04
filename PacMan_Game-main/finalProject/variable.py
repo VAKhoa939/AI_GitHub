@@ -15,6 +15,8 @@ moving = 0
 hit = False
 loading = ['','.','..','...',''] 
 loading_index = 0
+time_start = 0
+time_end = 0
 
 # variable for life increase / decrease
 life = 3
@@ -30,18 +32,30 @@ ghost_img = []
 history = []
 mode = 0
 cheat_code = ['','','','']
+color = 'Blue'
 
 #settings
-color = 'Blue'
 level = [] #import the boards matrix from board.py
+explore_board = []
+food_positions = []
 for i in range(len(level1)):
+    explore_board.append([])
+    for j in range(len(level1[i])):
+        if level1[i][j] < 3:
+            explore_board[i].append(" ")
+            if level1[i][j] == 1 or level1[i][j] == 2:
+                food_positions.append((i, j))
+        else:
+            explore_board[i].append("#")
     level.append(level1[i].copy())
-row = len(level) #32
-column = len(level[0]) #56
-WIDTH = column * 20 #1300
-HEIGHT = row * 20 #850
-num1 = (HEIGHT - 50) // row #vertical
-num2 = (WIDTH // column)
+# for i in range(len(level1)):
+#     level.append(level1[i].copy())
+row = len(level) #33
+column = len(level[0]) #30
+WIDTH = column * 20 #600
+HEIGHT = row * 20 #660
+num1 = (HEIGHT - 60) // row #vertical padding
+num2 = (WIDTH // column) #horizontal padding
 num3 = (num1 + num2) // 5 # 10
 player_imgs = []
 goal_score = goal_point(level)

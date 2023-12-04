@@ -30,13 +30,29 @@ class something_moves:
                 self.y += self.speed
                 self.center_y = self.y + 6
                 
+    def reset_attributes(self, x, y, cdirection):
+        self.x = x
+        self.y = y
+        self.center_x = x + 5
+        self.center_y = y + 6
+        self.cdirection = cdirection
+        self.state = 1
+        self.turn_allowed = [False, False, False, False]
         
-
+                
 class player(something_moves):
     def __init__(self, name, x, y, cdirection):
         something_moves.__init__(self, name, x, y, cdirection)
         self.direction = 0
         self.powerup = False
+        self.matrix_x = self.center_x // num2
+        self.matrix_y = self.center_y // num1
+        
+    def copy(self):
+        PacMan = player(self.name, self.x, self.y, self.cdirection)
+        PacMan.direction = self.direction
+        PacMan.powerup = self.powerup
+        return PacMan
         
     def add_frame(self):
         for i in range (1, 5):
@@ -90,6 +106,7 @@ class player(something_moves):
            self.state = 1
            
     def check_state(self):
+        pacman_y, pacman_x = self.get_matrix_position()
         count = 0
         for i in range(4):
             if i != self.cdirection and self.turn_allowed[i]:
@@ -98,7 +115,27 @@ class player(something_moves):
             self.state = -1
         else:
             self.state = 1
-           
+            
+    def get_position(self):
+        return self.center_y, self.center_x
+    
+    def get_matrix_position(self):
+        return (self.center_y // num1), (self.center_x // num2)
+    
+    # def move_fast(self):
+    #     if self.state == 1:
+    #         if self.cdirection == 0:
+    #             self.x += self.speed
+    #             self.center_x = self.x + 10
+    #         if self.cdirection == 1:
+    #             self.x -= self.speed
+    #             self.center_x = self.x + 10
+    #         if self.cdirection == 2:
+    #             self.y -= self.speed
+    #             self.center_y = self.y + 12
+    #         if self.cdirection == 3:
+    #             self.y += self.speed
+    #             self.center_y = self.y + 12
             
 class ghost(something_moves):
     def __init__(self, name, x, y, cdirection, file, Id, box):
@@ -106,18 +143,20 @@ class ghost(something_moves):
         self.id = Id
         self.imgs.append(Image.open(f'assets/ghost/{file}.png').resize((30, 30)))
         self.in_box = box
+        
     def set_target(self, player_x, player_y):
         self.target_x = player_x
         self.target_y = player_y
+        
     def change_direction(self):
         temp = []
         count_temp = 0 
         for i in range(4):
-                 if self.turn_allowed[i] == True :
-                     temp.append(i)
-                     count_temp += 1
-                 if count_temp > 2 :
-                     self.state = -1
+            if self.turn_allowed[i] == True :
+                temp.append(i)
+                count_temp += 1
+            if count_temp > 2 :
+                self.state = -1
         if self.state == -1 :
             self.cdirection = temp[random.randint(0,len(temp)-1)]
             print (self.state)

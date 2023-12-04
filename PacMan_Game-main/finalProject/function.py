@@ -1,4 +1,3 @@
-from numpy import *
 import time
 import math
 import random
